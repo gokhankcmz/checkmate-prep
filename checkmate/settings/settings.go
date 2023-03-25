@@ -1,6 +1,11 @@
 package settings
 
 type Settings struct {
+	StopAtFirstError     bool
+	DefaultErrorMessages DefaultErrorMessages
+}
+
+type DefaultErrorMessages struct {
 	NotEmpty     string
 	BiggerThan   string
 	LessThan     string
@@ -21,88 +26,98 @@ type Settings struct {
 	Alphabetic   string
 	Numeric      string
 	NoWhiteSpace string
+	UUID         string
+	NotZero      string
 }
 
-func (s *Settings) withDefaults() *Settings {
-	if s.NotEmpty == "" {
-		s.NotEmpty = "field is empty"
+func (d *DefaultErrorMessages) WithDefaults() DefaultErrorMessages {
+	if d.NotEmpty == "" {
+		d.NotEmpty = "The {fieldName} field is required and cannot be empty"
 	}
 
-	if s.BiggerThan == "" {
-		s.BiggerThan = "field is not bigger than {n}"
+	if d.BiggerThan == "" {
+		d.BiggerThan = "The {fieldName} field must be greater than {n}"
 	}
 
-	if s.LessThan == "" {
-		s.LessThan = "field is not less than {n}"
+	if d.LessThan == "" {
+		d.LessThan = "The {fieldName} field must be less than {n}"
 	}
 
-	if s.Exactly == "" {
-		s.Exactly = "field is not exactly {n}"
+	if d.Exactly == "" {
+		d.Exactly = "The {fieldName} field must be exactly {n}"
 	}
 
-	if s.Positive == "" {
-		s.Positive = "field is not positive"
+	if d.Positive == "" {
+		d.Positive = "The {fieldName} field must be a positive number"
 	}
 
-	if s.Negative == "" {
-		s.Negative = "field is not negative"
+	if d.Negative == "" {
+		d.Negative = "The {fieldName} field must be a negative number"
 	}
 
-	if s.InRange == "" {
-		s.InRange = "field is not in range [{min}, {max}]"
+	if d.InRange == "" {
+		d.InRange = "The {fieldName} field must be between {min} and {max}"
 	}
 
-	if s.Length == "" {
-		s.Length = "field length is not equal to {n}"
+	if d.Length == "" {
+		d.Length = "The length of {fieldName} must be {n}"
 	}
 
-	if s.MinLength == "" {
-		s.MinLength = "field length is smaller than {n}"
+	if d.MinLength == "" {
+		d.MinLength = "The length of {fieldName} must be at least {n}"
 	}
 
-	if s.MaxLength == "" {
-		s.MaxLength = "field length is larger than {n}"
+	if d.MaxLength == "" {
+		d.MaxLength = "The length of {fieldName} must not exceed {n}"
 	}
 
-	if s.ExactLength == "" {
-		s.ExactLength = "field length is not equal to {n}"
+	if d.ExactLength == "" {
+		d.ExactLength = "The length of {fieldName} must be exactly {n}"
 	}
 
-	if s.URL == "" {
-		s.URL = "field is not a valid URL"
+	if d.URL == "" {
+		d.URL = "The {fieldName} field must be a valid URL"
 	}
 
-	if s.Email == "" {
-		s.Email = "field is not a valid email address"
+	if d.Email == "" {
+		d.Email = "The {fieldName} field must be a valid email address"
 	}
 
-	if s.Contain == "" {
-		s.Contain = "field does not contain '{substr}'"
+	if d.Contain == "" {
+		d.Contain = "The {fieldName} field must contain '{substr}'"
 	}
 
-	if s.EvenNumber == "" {
-		s.EvenNumber = "field is not an even number"
+	if d.EvenNumber == "" {
+		d.EvenNumber = "The {fieldName} field must be an even number"
 	}
 
-	if s.OddNumber == "" {
-		s.OddNumber = "field is not an odd number"
+	if d.OddNumber == "" {
+		d.OddNumber = "The {fieldName} field must be an odd number"
 	}
 
-	if s.PrimeNumber == "" {
-		s.PrimeNumber = "field is not a prime number"
+	if d.PrimeNumber == "" {
+		d.PrimeNumber = "The {fieldName} field must be a prime number"
 	}
 
-	if s.Alphabetic == "" {
-		s.Alphabetic = "field contains non-alphabetic characters"
+	if d.Alphabetic == "" {
+		d.Alphabetic = "The {fieldName} field must contain only alphabetic characters"
 	}
 
-	if s.Numeric == "" {
-		s.Numeric = "field contains non-numeric characters"
+	if d.Numeric == "" {
+		d.Numeric = "The {fieldName} field must contain only numeric characters"
 	}
 
-	if s.NoWhiteSpace == "" {
-		s.NoWhiteSpace = "field contains white space"
+	if d.NoWhiteSpace == "" {
+		d.NoWhiteSpace = "The {fieldName} field must not contain white space"
 	}
 
-	return s
+	if d.UUID == "" {
+		d.UUID = "The {fieldName} field must a valid GUID err: {err}"
+	}
+
+	if d.NotZero == "" {
+		d.NotZero = "The {fieldName} field must not be 0"
+	}
+
+	return *d
 }

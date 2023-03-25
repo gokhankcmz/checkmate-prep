@@ -2,22 +2,41 @@ package helper
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
-func FixErrorMessage(err error, defaultMessage, fieldMessage string, ruleMessage ...string) error {
-	text := strings.Join(ruleMessage, " ")
-
-	if text == "" {
-		text = fieldMessage
+func ErrorBuilder(defaultMessage string, message string, args map[string]interface{}) error {
+	if message == "" {
+		message = defaultMessage
 	}
 
-	if text == "" {
-		text = defaultMessage
+	for k, v := range args {
+		message = strings.ReplaceAll(message, fmt.Sprintf("{%s}", k), fmt.Sprint(v))
 	}
 
-	if err == nil {
-		return errors.New(strings.ReplaceAll(text, "{err}", ""))
+	return errors.New(RemoveSubstrings(message))
+}
+
+func RemoveSubstrings(s string) string {
+	var result string
+	var inBrackets bool
+
+	for _, c := range s {
+		if c == '{' {
+			inBrackets = true
+			continue
+		}
+
+		if c == '}' {
+			inBrackets = false
+			continue
+		}
+
+		if !inBrackets {
+			result += string(c)
+		}
 	}
-	return errors.New(strings.ReplaceAll(text, "{err}", err.Error()))
+
+	return strings.TrimSpace(result)
 }

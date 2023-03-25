@@ -1,39 +1,54 @@
 package checkmate
 
 import (
-	settings2 "cmDeneme/checkmate/settings"
+	"cmDeneme/checkmate/intValidations"
+	"cmDeneme/checkmate/settings"
 	"cmDeneme/checkmate/stringValidation"
 	"cmDeneme/checkmate/validation"
 )
 
 type validator struct {
-	settings    *settings2.Settings
+	settings    *settings.Settings
 	validations []validation.IValidation
 }
 
-func New(settings *settings2.Settings) *validator {
+var v *settings.Settings
+
+func Init(settings *settings.Settings) {
+	settings.DefaultErrorMessages = settings.DefaultErrorMessages.WithDefaults()
+	v = settings
+}
+
+func New() *validator {
 	return &validator{
-		settings: settings,
+		settings: v,
 	}
 }
 
-func (v *validator) ValidateString(value string, defaultMessage ...string) *stringValidation.Validation {
-	sCase := &stringValidation.Validation{
-		Subject:  value,
-		Settings: v.settings,
+func (v *validator) ValidateInt(value *int, fieldName string) *intValidations.IntValidations {
+	if value == nil {
+		return &intValidations.IntValidations{}
 	}
-	if len(defaultMessage) > 0 {
-		sCase.DefaultMessage = defaultMessage[0]
+	sCase := &intValidations.IntValidations{
+		Field:     *value,
+		FieldName: fieldName,
+		Settings:  v.settings,
 	}
 	v.addValidation(sCase)
 	return sCase
 }
 
-func (v *validator) ValidateStringPtr(value *string, defaultMessage ...string) *stringValidation.Validation {
+func (v *validator) ValidateString(value *string, fieldName string) *stringValidation.StringValidation {
 	if value == nil {
-		return &stringValidation.Validation{}
+		return &stringValidation.StringValidation{}
 	}
-	return v.ValidateString(*value, defaultMessage...)
+	sCase := &stringValidation.StringValidation{
+		Field:     *value,
+		FieldName: fieldName,
+		Settings:  v.settings,
+	}
+	v.addValidation(sCase)
+	return sCase
 }
 
 func (v *validator) addValidation(validation validation.IValidation) {
@@ -44,6 +59,9 @@ func (v *validator) Validate() []error {
 	errors := make([]error, 0)
 	for _, vr := range v.validations {
 		errors = append(errors, vr.Validate()...)
+		if v.settings.StopAtFirstError {
+			return errors
+		}
 
 	}
 	return errors
