@@ -2,33 +2,17 @@ package intValidations
 
 import (
 	"cmDeneme/checkmate/helper"
-	"cmDeneme/checkmate/settings"
+	"cmDeneme/checkmate/validation"
 	"strings"
 )
 
 type IntValidations struct {
-	Field     int
-	FieldName string
-	Settings  *settings.Settings
-	Rules     []func() error
-}
-
-func (v *IntValidations) Validate() []error {
-	var errors = make([]error, 0)
-	for _, r := range v.Rules {
-		if err := r(); err != nil {
-			errors = append(errors, err)
-		}
-	}
-	return errors
-}
-
-func (v *IntValidations) DefaultMessages() *settings.DefaultErrorMessages {
-	return &v.Settings.DefaultErrorMessages
+	Field int
+	validation.Validation
 }
 
 func (v *IntValidations) NotZero(message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field == 0 {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().NotZero,
@@ -43,7 +27,7 @@ func (v *IntValidations) NotZero(message ...string) *IntValidations {
 }
 
 func (v *IntValidations) Positive(message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field <= 0 {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().Positive,
@@ -58,7 +42,7 @@ func (v *IntValidations) Positive(message ...string) *IntValidations {
 }
 
 func (v *IntValidations) Negative(message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field >= 0 {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().Negative,
@@ -72,11 +56,11 @@ func (v *IntValidations) Negative(message ...string) *IntValidations {
 	return v
 }
 
-func (v *IntValidations) BiggerThan(n int, message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+func (v *IntValidations) GreaterThan(n int, message ...string) *IntValidations {
+	v.AddRule(func() error {
 		if v.Field <= n {
 			return helper.ErrorBuilder(
-				v.DefaultMessages().BiggerThan,
+				v.DefaultMessages().GreaterThan,
 				strings.Join(message, " "),
 				map[string]interface{}{
 					"fieldName": v.FieldName,
@@ -89,7 +73,7 @@ func (v *IntValidations) BiggerThan(n int, message ...string) *IntValidations {
 }
 
 func (v *IntValidations) LessThan(n int, message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field >= n {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().LessThan,
@@ -105,7 +89,7 @@ func (v *IntValidations) LessThan(n int, message ...string) *IntValidations {
 }
 
 func (v *IntValidations) InRange(min, max int, message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field < min || v.Field > max {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().InRange,
@@ -122,7 +106,7 @@ func (v *IntValidations) InRange(min, max int, message ...string) *IntValidation
 }
 
 func (v *IntValidations) Exactly(n int, message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field != n {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().Exactly,
@@ -138,7 +122,7 @@ func (v *IntValidations) Exactly(n int, message ...string) *IntValidations {
 }
 
 func (v *IntValidations) EvenNumber(message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field%2 != 0 {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().EvenNumber,
@@ -153,7 +137,7 @@ func (v *IntValidations) EvenNumber(message ...string) *IntValidations {
 }
 
 func (v *IntValidations) OddNumber(message ...string) *IntValidations {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field%2 == 0 {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().OddNumber,
@@ -164,5 +148,10 @@ func (v *IntValidations) OddNumber(message ...string) *IntValidations {
 		}
 		return nil
 	})
+	return v
+}
+
+func (v *IntValidations) Custom(f func() error) *IntValidations {
+	v.AddRule(f)
 	return v
 }

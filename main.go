@@ -1,25 +1,30 @@
 package main
 
 import (
-	"cmDeneme/checkmate"
-	"cmDeneme/checkmate/settings"
-	"cmDeneme/types"
+	"cmDeneme/example"
 	"fmt"
+	"time"
 )
 
 func main() {
 
-	checkmate.Init(&settings.Settings{StopAtFirstError: true})
+	start := time.Now()
 
-	age := 0
-	user := types.User{
-		Name:    "this text",
-		Address: types.Address{},
-		Age:     &age,
+	user := example.User{
+		Name:        "",
+		Surname:     "",
+		YearOfBirth: 0,
+		Address: example.Address{
+			City:    "",
+			Country: nil,
+		},
+		Email:   "",
+		WebPage: "",
 	}
 
 	errs := user.Validate()
 	for _, v := range errs {
 		fmt.Println(v.Error())
 	}
+	fmt.Println("Total execution time: ", time.Since(start))
 }

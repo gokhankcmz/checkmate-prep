@@ -1,6 +1,7 @@
 package checkmate
 
 import (
+	"cmDeneme/checkmate/customValidation"
 	"cmDeneme/checkmate/intValidations"
 	"cmDeneme/checkmate/settings"
 	"cmDeneme/checkmate/stringValidation"
@@ -12,43 +13,62 @@ type validator struct {
 	validations []validation.IValidation
 }
 
-var v *settings.Settings
+var vs *settings.Settings
 
 func Init(settings *settings.Settings) {
 	settings.DefaultErrorMessages = settings.DefaultErrorMessages.WithDefaults()
-	v = settings
+	vs = settings
 }
 
 func New() *validator {
+	if vs == nil {
+		vs = &settings.Settings{
+			StopAtFirstError:     false,
+			DefaultErrorMessages: (&settings.DefaultErrorMessages{}).WithDefaults(),
+		}
+	}
 	return &validator{
-		settings: v,
+		settings: vs,
 	}
 }
 
+func (v *validator) ValidateStruct(value validation.IValidation) {
+	v.addValidation(value)
+}
+
+func (v *validator) Custom(value func() []error) {
+	v.addValidation(&customValidation.CustomValidation{
+		F: value,
+	})
+}
 func (v *validator) ValidateInt(value *int, fieldName string) *intValidations.IntValidations {
 	if value == nil {
 		return &intValidations.IntValidations{}
 	}
-	sCase := &intValidations.IntValidations{
-		Field:     *value,
-		FieldName: fieldName,
-		Settings:  v.settings,
+	vCase := &intValidations.IntValidations{
+		Field: *value,
+		Validation: validation.Validation{
+			FieldName: fieldName,
+			Settings:  v.settings,
+		},
 	}
-	v.addValidation(sCase)
-	return sCase
+	v.addValidation(vCase)
+	return vCase
 }
 
 func (v *validator) ValidateString(value *string, fieldName string) *stringValidation.StringValidation {
 	if value == nil {
 		return &stringValidation.StringValidation{}
 	}
-	sCase := &stringValidation.StringValidation{
-		Field:     *value,
-		FieldName: fieldName,
-		Settings:  v.settings,
+	vCase := &stringValidation.StringValidation{
+		Field: *value,
+		Validation: validation.Validation{
+			FieldName: fieldName,
+			Settings:  v.settings,
+		},
 	}
-	v.addValidation(sCase)
-	return sCase
+	v.addValidation(vCase)
+	return vCase
 }
 
 func (v *validator) addValidation(validation validation.IValidation) {
@@ -56,13 +76,13 @@ func (v *validator) addValidation(validation validation.IValidation) {
 }
 
 func (v *validator) Validate() []error {
-	errors := make([]error, 0)
+	errs := make([]error, 0)
 	for _, vr := range v.validations {
-		errors = append(errors, vr.Validate()...)
+		errs = append(errs, vr.Validate()...)
 		if v.settings.StopAtFirstError {
-			return errors
+			return errs
 		}
 
 	}
-	return errors
+	return errs
 }

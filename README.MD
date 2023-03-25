@@ -1,4 +1,4 @@
 TODO: 
-birbirini ezen error yapıları ve ayarlar
-rule'ların üzerindeki validate methodunu ve alanları private yap
-custom rule
+ * Exported olmasına gerek olmayan field ve functionlar kapatılmalı
+ * Nested obje validasyonu geliştirilmeli. User.Address.City şeklinde fieldName girişi yapılabilmeli
+ * Eksik veri tiplerinin validasyonları (map, bool, float vs.)

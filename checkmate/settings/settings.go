@@ -7,7 +7,7 @@ type Settings struct {
 
 type DefaultErrorMessages struct {
 	NotEmpty     string
-	BiggerThan   string
+	GreaterThan  string
 	LessThan     string
 	Exactly      string
 	Positive     string
@@ -35,8 +35,8 @@ func (d *DefaultErrorMessages) WithDefaults() DefaultErrorMessages {
 		d.NotEmpty = "The {fieldName} field is required and cannot be empty"
 	}
 
-	if d.BiggerThan == "" {
-		d.BiggerThan = "The {fieldName} field must be greater than {n}"
+	if d.GreaterThan == "" {
+		d.GreaterThan = "The {fieldName} field must be greater than {n}"
 	}
 
 	if d.LessThan == "" {
@@ -112,7 +112,7 @@ func (d *DefaultErrorMessages) WithDefaults() DefaultErrorMessages {
 	}
 
 	if d.UUID == "" {
-		d.UUID = "The {fieldName} field must a valid GUID err: {err}"
+		d.UUID = "The {fieldName} field must be a valid GUID err: {err}"
 	}
 
 	if d.NotZero == "" {

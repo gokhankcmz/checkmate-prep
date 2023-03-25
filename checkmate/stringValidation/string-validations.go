@@ -2,7 +2,7 @@ package stringValidation
 
 import (
 	"cmDeneme/checkmate/helper"
-	"cmDeneme/checkmate/settings"
+	"cmDeneme/checkmate/validation"
 	"net/url"
 	"strings"
 	"unicode"
@@ -11,31 +11,12 @@ import (
 )
 
 type StringValidation struct {
-	Field     string
-	FieldName string
-	Settings  *settings.Settings
-	Rules     []func() error
-}
-
-func (v *StringValidation) Validate() []error {
-	var errors = make([]error, 0)
-	for _, r := range v.Rules {
-		if err := r(); err != nil {
-			errors = append(errors, err)
-			if v.Settings.StopAtFirstError {
-				return errors
-			}
-		}
-	}
-	return errors
-}
-
-func (v *StringValidation) DefaultMessages() *settings.DefaultErrorMessages {
-	return &v.Settings.DefaultErrorMessages
+	Field string
+	validation.Validation
 }
 
 func (v *StringValidation) NotEmpty(message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if v.Field == "" {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().NotEmpty,
@@ -50,7 +31,7 @@ func (v *StringValidation) NotEmpty(message ...string) *StringValidation {
 }
 
 func (v *StringValidation) MinLength(n int, message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if len(v.Field) <= n {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().MinLength,
@@ -66,7 +47,7 @@ func (v *StringValidation) MinLength(n int, message ...string) *StringValidation
 }
 
 func (v *StringValidation) MaxLength(n int, message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if len(v.Field) > n {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().MaxLength,
@@ -82,7 +63,7 @@ func (v *StringValidation) MaxLength(n int, message ...string) *StringValidation
 }
 
 func (v *StringValidation) ExactLength(n int, message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if len(v.Field) != n {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().ExactLength,
@@ -98,7 +79,7 @@ func (v *StringValidation) ExactLength(n int, message ...string) *StringValidati
 }
 
 func (v *StringValidation) InRange(min, max int, message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if len(v.Field) < min || len(v.Field) > max {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().InRange,
@@ -115,7 +96,7 @@ func (v *StringValidation) InRange(min, max int, message ...string) *StringValid
 }
 
 func (v *StringValidation) Contain(substr string, message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if !strings.Contains(v.Field, substr) {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().Contain,
@@ -131,7 +112,7 @@ func (v *StringValidation) Contain(substr string, message ...string) *StringVali
 }
 
 func (v *StringValidation) Alphabetic(message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		runes := []rune(strings.ReplaceAll(v.Field, " ", ""))
 		for _, r := range runes {
 			if !unicode.IsLetter(r) {
@@ -149,7 +130,7 @@ func (v *StringValidation) Alphabetic(message ...string) *StringValidation {
 }
 
 func (v *StringValidation) Numeric(message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		runes := []rune(v.Field)
 		for _, r := range runes {
 			if !unicode.IsDigit(r) {
@@ -167,7 +148,7 @@ func (v *StringValidation) Numeric(message ...string) *StringValidation {
 }
 
 func (v *StringValidation) NoWhiteSpace(message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		if strings.Contains(v.Field, " ") {
 			return helper.ErrorBuilder(
 				v.DefaultMessages().NoWhiteSpace,
@@ -182,7 +163,7 @@ func (v *StringValidation) NoWhiteSpace(message ...string) *StringValidation {
 }
 
 func (v *StringValidation) URL(message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		_, err := url.ParseRequestURI(v.Field)
 		if err != nil {
 			return helper.ErrorBuilder(
@@ -199,7 +180,7 @@ func (v *StringValidation) URL(message ...string) *StringValidation {
 }
 
 func (v *StringValidation) UUID(message ...string) *StringValidation {
-	v.Rules = append(v.Rules, func() error {
+	v.AddRule(func() error {
 		_, err := uuid.Parse(v.Field)
 		if err != nil {
 			return helper.ErrorBuilder(
@@ -212,5 +193,45 @@ func (v *StringValidation) UUID(message ...string) *StringValidation {
 		}
 		return nil
 	})
+	return v
+}
+
+func (v *StringValidation) Email(message ...string) *StringValidation {
+	//TODO: Regex maybe?
+	v.AddRule(func() error {
+		emailParts := strings.Split(v.Field, "@")
+		if len(emailParts) != 2 {
+			return helper.ErrorBuilder(
+				v.DefaultMessages().Email,
+				strings.Join(message, " "),
+				map[string]interface{}{
+					"fieldName": v.FieldName,
+				})
+		}
+		localPart := emailParts[0]
+		domainPart := emailParts[1]
+		if localPart == "" || domainPart == "" {
+			return helper.ErrorBuilder(
+				v.DefaultMessages().Email,
+				strings.Join(message, " "),
+				map[string]interface{}{
+					"fieldName": v.FieldName,
+				})
+		}
+		if strings.Contains(localPart, " ") || strings.Contains(domainPart, " ") {
+			return helper.ErrorBuilder(
+				v.DefaultMessages().Email,
+				strings.Join(message, " "),
+				map[string]interface{}{
+					"fieldName": v.FieldName,
+				})
+		}
+		return nil
+	})
+	return v
+}
+
+func (v *StringValidation) Custom(f func() error) *StringValidation {
+	v.AddRule(f)
 	return v
 }
